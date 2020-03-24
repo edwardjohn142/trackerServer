@@ -1,11 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.27.3.js"></script>
+    
 </head>
+
 <body>
-        <h1>Hello</h1>
+
+    <h1>Tracker</h1>
+
+    <div id="googleMap" style="width:100%;height:400px;"></div>
+
+<script>
+    var channels = [];
+    var pubnub = new PubNub({
+        publishKey: "pub-c-38bbe3c0-6929-4c22-b4a6-5d8704430219",
+        subscribeKey: "sub-c-1164dd6c-6747-11ea-9174-5e95b827fd71",
+    });
+
+
+
+
+
+    pubnub.addListener({
+        status: function(statusEvent) {
+            if (statusEvent.category === "PNConnectedCategory") {
+                console.log(statusEvent);
+                
+            }
+        },
+        message: function(message) {
+            // handle message
+            console.log(message);
+            
+        },
+        presence: function(presenceEvent) {
+            // handle presence
+        }
+    });
+    setInterval(()=>{
+        pubnub.fetchMessages(
+            {
+                channels: ['location'],
+            },
+            (status, response) => {
+                console.log(response);
+                let location = {latitude:response.channels.location[0].message.latitude,longitude:response.channels.location[0].message.longitude}
+                moveMarker( location )
+            }
+        );
+    },5000)
+
+    pubnub.subscribe({
+        channel: ['location']
+    });;
+
+    pubnub.hereNow(
+        {
+            channels: ["location"], 
+            includeUUIDs: true,
+            includeState: true 
+        },
+        function (status, response) {
+            console.log(response);
+            
+        }
+    );
+
+    var marker,map;
+    function initialize() {
+        var myLatLng = new google.maps.LatLng( 50, 50 ),
+            myOptions = {
+                zoom: 4,
+                center: myLatLng,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+            map = new google.maps.Map( document.getElementById( 'googleMap' ), myOptions );
+            marker = new google.maps.Marker( {position: myLatLng, map: map} );
+        marker.setMap( map );
+        map.setZoom(17);   
+    }
+
+    function moveMarker( latlng ) {
+
+            marker.setPosition( new google.maps.LatLng( latlng.latitude,latlng.longitude) );
+            map.panTo( new google.maps.LatLng( latlng.latitude,latlng.longitude) );
+            
+
+
+    };
+
+</script>
+
+    <script src="./js/pubnub.js"></script>
+    <script src="./js/main.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC7gp1hFc1NcP5bXSpaUtWjb1NHyyO8WkY&callback=initialize"></script>
 </body>
+
 </html>

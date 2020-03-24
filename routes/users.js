@@ -1,37 +1,128 @@
 const router = require('express').Router();
-let User = require('./../model/users');
+// const User = require('./../model/users'); mongodb
+const mysql = require('mysql');
+const jwt = require('jsonwebtoken');
+const users = [
+  {
+    id:1,
+    username:"user1",
+    password:"123456",
+    token:''
 
+  },{
+    id:2,
+    username:"user2",
+    password:"123456",
+    token:''
 
+  },{
+    id:3,
+    username:"user3",
+    password:"123456",
+    token:''
 
-router.route('/').get((req, res) => {
-  User.find()
-    .then(users => res.json(users))
-    .catch(err => res.status(400).json('Error: ' + err));
+  },{
+    id:4,
+    username:"user4",
+    password:"123456",
+    token:''
+
+  },{
+    id:5,
+    username:"user5",
+    password:"123456",
+    token:''
+
+  },
+  
+]
+
+const mc = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'tracker'
 });
 
-router.route('/update-location/:id').post((req,res) => {
+mc.connect((err) => {
+  if(err){
+      console.log('Error connecting to Db');
+      return;
+  }
+  console.log('Connection established');
+});
 
-  User.findById(req.params.id).then(user => {
-    user.username = req.body.username;
-    user.description = req.body.description;
-    user.latitude = req.body.latitude;
-    user.longtitude = req.body.longtitude;
 
-    user.save()
-    .then(()=>res.json({success:true}))
-    .catch(err => res.json({success:false}))
-  })
-  .catch(err => res.status(400).json('Error: ' + err));
-})
+
+router.route('/').post(verifyToken,(req, res) => {
+    
+  jwt.verify(req.token, 'secretkey', (err, authData) => {
+    if(err) {
+      res.sendStatus(403).json("token is invalid");
+    } else {
+      
+// ***** this is only for testing. no database connection yet *****
+      users.forEach(user =>{
+        if(user.token == req.token){
+          res.json({
+            user:user,
+            status:200,
+            success:true
+          });
+          return false;
+        }
+      });
+      // mc.query('SELECT * FROM user', (err,rows) => {
+      //   if(err) throw err;
+      //   return res.json(rows);
+      // });
+    }
+  });
+  
+
+});
 
 
 router.route('/auth').post((req,res) => {
-  console.log(req.body);
-  
-  User.find({username:req.body.username,password:req.body.password})
-  .then(users =>{console.log(users);
-   res.json(users)})
-  .catch(err => res.status(400).json('Error: ' + err));
+// ***** this is only for testing. no database connection yet *****
+  users.forEach((user,index) => {
+    if(user.username == req.body.username && user.password == req.body.password){
+      jwt.sign({user:user}, 'secretkey', (err, token) => {    
+        if(err){
+          res.status(403).json("Invalid username or password")
+        }
+        users[index].token = token; 
+        console.log(users[index]);
+        
+        res.json({
+          token:token,
+          id:user.id,
+          status:200,
+          success:true
+        });
+      });
+      return false;
+    }
+  });
+
+
+
+  // mc.query('SELECT * FROM user where username = ? and password = ?',[req.body.username,req.body.password]	, (err,rows) => {
+  //   if(err) throw err => res.status(400).json({message:'Error: ' + err, success:false});
+  //   if(rows.length <= 0){
+  //     res.status(403).json("Invalid username or password")
+  //   }else{
+  //     jwt.sign({user:rows[0]}, 'secretkey', (err, token) => {        
+  //       res.json({
+  //         token:token,
+  //         status:200,
+  //         success:true
+  //       });
+  //     });
+  //   }
+  // });
+
+
 })
 
 router.route('/add').post((req, res) => {
@@ -50,4 +141,19 @@ router.route('/add').post((req, res) => {
     .catch(err => res.json('Error: ' + err));
 });
 
+
+
+
+function verifyToken(req, res, next) {
+  const bearerHeader = req.headers['authorization'];
+  if(typeof bearerHeader !== 'undefined') {
+    const bearer = bearerHeader.split(' ');
+    const bearerToken = bearer[1];
+    req.token = bearerToken;
+    next();
+  } else {
+    res.sendStatus(403);
+  }
+
+}
 module.exports = router;
