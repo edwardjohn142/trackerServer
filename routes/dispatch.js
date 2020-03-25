@@ -5,18 +5,15 @@ const jwt = require('jsonwebtoken');
 
 
 router.route('/').post(verifyToken,(req, res) => {
-    jwt.verify(req.token, 'secretkey', (err, authData) => {
-        console.log(err);
-        
-      if(err) {
-        res.sendStatus(403).json("token is invalid");
-      } else {
+
+
+
   // ***** this is only for testing. no database connection yet *****
         let rawdata = fs.readFileSync('./json/dispatch.json');
         let jobs = JSON.parse(rawdata);
         res.json({status:200,datas:jobs});
-      }
-    });
+      
+  
     
 });
 
