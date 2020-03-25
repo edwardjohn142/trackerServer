@@ -12,8 +12,12 @@ app.use(express.json());
 
 
 const usersRouter = require('./routes/users');
+const dispatchRouter = require('./routes/dispatch');
 app.use('/user', usersRouter);
+app.use('/dispatch', dispatchRouter);
 
+
+// ***the default is the rider tracker*** 
 router.get('/', function(req, res) {
     res.sendFile(path.join(__dirname+'/index.html'));
 });

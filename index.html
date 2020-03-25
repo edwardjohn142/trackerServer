@@ -79,9 +79,6 @@
         
         if(marker.length == 0){
             marker.push(latlng);
-            console.log(marker[marker.length - 1].latLng);
-            
-            
             marker[marker.length - 1].marker = new google.maps.Marker( {position: new google.maps.LatLng( marker[marker.length - 1].latLng.latitude, marker[marker.length - 1].latLng.longitude ) , map: map} )
             map.panTo( new google.maps.LatLng( marker[marker.length - 1].latLng.latitude, marker[marker.length - 1].latLng.longitude) )
         }else{
@@ -90,7 +87,6 @@
                 if(marker[i].username == latlng.username){
                     marker[i].latLng = latlng.latLng;
                     counter += 1;
-                    console.log(marker[i].latLng.latitude);
                     marker[i].marker.setPosition( new google.maps.LatLng( marker[i].latLng.latitude,marker[i].latLng.longitude) );
                 }
                 
